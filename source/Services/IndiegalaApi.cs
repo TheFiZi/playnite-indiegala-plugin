@@ -984,15 +984,16 @@ namespace IndiegalaLibrary.Services
                         if (body.Contains("NoneType") && body.Contains("count"))
                         {
                             Logger.Warn($"Indiegala sign-in transient error, attempt {attempt}");
-                            message = body;
+                            message = "Indiegala server error, try again later";
                             continue;
                         }
 
                         _ = Serialization.TryFromJson(body, out GclLoginResponse loginResponse);
                         if (!loginResponse?.Status?.IsEqual("success") ?? true)
                         {
-                            message = loginResponse?.Message ?? body;
-                            Logger.Warn($"Indiegala sign-in rejected: {message}");
+                            // The body is shown to the user only when it is a proper JSON answer, never raw HTML or a traceback.
+                            message = loginResponse?.Message ?? "Unexpected response from Indiegala";
+                            Logger.Warn($"Indiegala sign-in rejected: {loginResponse?.Message ?? body}");
                             return false;
                         }
 

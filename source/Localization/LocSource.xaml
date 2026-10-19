@@ -33,6 +33,7 @@
     <sys:String x:Key="LOCIndiegalaLibraryCredentialsNone">No credentials saved</sys:String>
     <sys:String x:Key="LOCIndiegalaLibraryCredentialsMissing">Enter both email and password</sys:String>
     <sys:String x:Key="LOCIndiegalaLibraryCredentialsRejected">Sign-in failed: {0}</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryCredentialsSaveFailed">Signed in, but the credentials could not be saved</sys:String>
 
     <!-- IndiegalaLibraryExeSelection -->
 

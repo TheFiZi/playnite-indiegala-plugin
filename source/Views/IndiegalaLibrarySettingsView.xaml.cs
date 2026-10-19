@@ -221,15 +221,17 @@ namespace IndiegalaLibrary.Views
                 return;
             }
 
+            // Forget stays disabled until the save finishes, so it cannot be undone by the save writing the file afterwards.
             PART_SaveCredentials.IsEnabled = false;
+            PART_ClearCredentials.IsEnabled = false;
             PART_LabelCredentials.Content = ResourceProvider.GetString("LOCCommonLoginChecking");
 
             _ = Task.Run(() =>
             {
                 bool success = IndiegalaApi.LoginWithCredentials(email, password, out string message);
+                bool saved = success && IndiegalaApi.SetStoredCredentials(email, password);
                 if (success)
                 {
-                    _ = IndiegalaApi.SetStoredCredentials(email, password);
                     IndiegalaApi.ResetIsUserLoggedIn();
                 }
 
@@ -240,9 +242,15 @@ namespace IndiegalaLibrary.Views
                     {
                         ShowStoredCredentials();
                         CheckIsAuthWithoutClient();
+                        if (!saved)
+                        {
+                            // Signed in, but automatic sign-in will not work without the saved credentials.
+                            PART_LabelCredentials.Content = ResourceProvider.GetString("LOCIndiegalaLibraryCredentialsSaveFailed");
+                        }
                     }
                     else
                     {
+                        PART_ClearCredentials.IsEnabled = IndiegalaApi.HasStoredCredentials();
                         PART_LabelCredentials.Content = string.Format(ResourceProvider.GetString("LOCIndiegalaLibraryCredentialsRejected"), message);
                     }
                 }));
