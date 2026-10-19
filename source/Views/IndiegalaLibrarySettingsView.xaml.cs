@@ -24,6 +24,7 @@ namespace IndiegalaLibrary.Views
             DataContext = this;
 
             CheckIsAuthWithoutClient();
+            ShowStoredCredentials();
 
             /*
             if (!IndiegalaLibrary.IndiegalaClient.IsInstalled)
@@ -194,6 +195,64 @@ namespace IndiegalaLibrary.Views
                 PART_InstallPath.Text = SelectedFolder;
                 Settings.InstallPath = SelectedFolder;
             }
+        }
+        #endregion
+
+
+        #region Automatic sign-in
+        private void ShowStoredCredentials()
+        {
+            string email = IndiegalaApi.GetStoredEmail();
+            PART_Email.Text = email ?? string.Empty;
+            PART_Password.Clear();
+            PART_ClearCredentials.IsEnabled = email != null;
+            PART_LabelCredentials.Content = email != null
+                ? string.Format(ResourceProvider.GetString("LOCIndiegalaLibraryCredentialsSaved"), email)
+                : ResourceProvider.GetString("LOCIndiegalaLibraryCredentialsNone");
+        }
+
+        private void Button_SaveCredentials(object sender, RoutedEventArgs e)
+        {
+            string email = PART_Email.Text?.Trim();
+            string password = PART_Password.Password;
+            if (email.IsNullOrEmpty() || password.IsNullOrEmpty())
+            {
+                PART_LabelCredentials.Content = ResourceProvider.GetString("LOCIndiegalaLibraryCredentialsMissing");
+                return;
+            }
+
+            PART_SaveCredentials.IsEnabled = false;
+            PART_LabelCredentials.Content = ResourceProvider.GetString("LOCCommonLoginChecking");
+
+            _ = Task.Run(() =>
+            {
+                bool success = IndiegalaApi.LoginWithCredentials(email, password, out string message);
+                if (success)
+                {
+                    _ = IndiegalaApi.SetStoredCredentials(email, password);
+                    IndiegalaApi.ResetIsUserLoggedIn();
+                }
+
+                Application.Current.Dispatcher?.Invoke(new Action(() =>
+                {
+                    PART_SaveCredentials.IsEnabled = true;
+                    if (success)
+                    {
+                        ShowStoredCredentials();
+                        CheckIsAuthWithoutClient();
+                    }
+                    else
+                    {
+                        PART_LabelCredentials.Content = string.Format(ResourceProvider.GetString("LOCIndiegalaLibraryCredentialsRejected"), message);
+                    }
+                }));
+            });
+        }
+
+        private void Button_ClearCredentials(object sender, RoutedEventArgs e)
+        {
+            IndiegalaApi.ClearStoredCredentials();
+            ShowStoredCredentials();
         }
         #endregion
 
