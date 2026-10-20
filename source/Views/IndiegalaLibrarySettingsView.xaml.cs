@@ -205,7 +205,7 @@ namespace IndiegalaLibrary.Views
             string email = IndiegalaApi.GetStoredEmail();
             PART_Email.Text = email ?? string.Empty;
             PART_Password.Clear();
-            PART_ClearCredentials.IsEnabled = email != null;
+            PART_ClearCredentials.IsEnabled = IndiegalaApi.HasStoredCredentials();
             PART_LabelCredentials.Content = email != null
                 ? string.Format(ResourceProvider.GetString("LOCIndiegalaLibraryCredentialsSaved"), email)
                 : ResourceProvider.GetString("LOCIndiegalaLibraryCredentialsNone");
